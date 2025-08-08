@@ -2,6 +2,7 @@ package com.bankapp.service;
 
 import com.bankapp.model.Account;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -11,12 +12,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AccountService {
 
     private UserService userService;
-    private final Double defaultAccountAmount;
+    private final double defaultAccountAmount;
+    private final double defaultAccountCommission;
     private final AtomicInteger idGenerator = new AtomicInteger(1);
     private final Map<Integer, Account> accounts = new HashMap<>();
 
-    public AccountService(Double defaultAccountAmount) {
+    public AccountService(
+            @Value("${account.default-amount}") double defaultAccountAmount,
+            @Value("${accaount.transfer-commission}") double defaultAccountCommission) {
         this.defaultAccountAmount = defaultAccountAmount;
+        this.defaultAccountCommission = defaultAccountCommission;
     }
 
     public Account createAccount(Integer userId) {
@@ -49,7 +54,7 @@ public class AccountService {
             return true;
         } else {
             System.out.println("Error executing command ACCOUNT_WITHDRAW: error = no such money to withdraw" +
-                    "/ from account: id=" + id + ", moneymount=0" + ", attempteWithdraw=" + amount);
+                    "/ from account: id=" + id + ", moneyAmount=0" + ", attemptedWithdraw=" + amount);
             return false;
         }
     }
@@ -81,13 +86,21 @@ public class AccountService {
     public void transferMoney(Integer fromId, Integer toId, Double amount) {
         Double amountFromId = accounts.get(fromId).getAccountAmount();
         Double amountToId = accounts.get(toId).getAccountAmount();
-        if (amountFromId >= amount && fromId != toId) {
+        if (amountFromId < amount || fromId.equals(toId)) {
+            System.out.println("Don't have enough money in account ID " + fromId + " or you put the same account Id. Operation declined!");
+        } else if (checkAccountId(fromId, toId)) {
             accounts.get(fromId).setAccountAmount(amountFromId - amount);
             accounts.get(toId).setAccountAmount(amountToId + amount);
             System.out.println("Amount " + amount + " transferred from account ID " + fromId + " to account ID " + toId + ".");
         } else {
-            System.out.println("Don't enough money in account ID " + fromId + " or User has only one account. Operation declined!");
+            accounts.get(fromId).setAccountAmount(amountFromId - amount);
+            accounts.get(toId).setAccountAmount(amountToId + (amount - amount * (defaultAccountCommission / 100)));
+            System.out.println("Amount " + amount + " transferred from account ID " + fromId + " to account ID " + toId + ".");
         }
+    }
+
+    public Boolean checkAccountId(Integer fromId, Integer toId) {
+        return accounts.get(fromId).getUserId().equals(accounts.get(toId).getUserId());
     }
 
     @Autowired

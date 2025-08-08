@@ -10,12 +10,4 @@ import org.springframework.context.annotation.PropertySource;
 @ComponentScan(basePackages = "com.bankapp")
 @PropertySource("classpath:application.properties")
 public class ConfigurationProperties {
-
-    @Value("${account.default-amount}")
-    private Double defaultBalance;
-
-    @Bean
-    public Double defaultAccountAmount() {
-        return defaultBalance;
-    }
 }

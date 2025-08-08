@@ -10,12 +10,10 @@ import java.util.Scanner;
 @Service
 public class OperationsConsoleListener {
 
-    private final Double defaultAccountAmount;
     private final UserService userService;
     private final AccountService accountService;
 
-    public OperationsConsoleListener(Double defaultAccountAmount, UserService userService, AccountService accountService) {
-        this.defaultAccountAmount = defaultAccountAmount;
+    public OperationsConsoleListener(UserService userService, AccountService accountService) {
         this.userService = userService;
         this.accountService = accountService;
     }
